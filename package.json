@@ -1,0 +1,33 @@
+{
+  "name": "zen",
+  "version": "0.0.1",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "latest",
+    "angularjs-scope.safeapply": "latest",
+    "mongodb": "latest",
+    "ejs": "latest",
+    "ejs-locals": "latest",
+    "jade": "latest",
+    "underscore": "latest",
+    "twitter": "latest",
+    "mysql":"latest",
+    "dateformat":"latest",
+    "kraken-api":"latest"
+  },
+  "devDependencies": {
+    "browserify": "latest",
+    "event-stream": "^3.3.1",
+    "gulp": "latest",
+    "gulp-autoprefixer": "latest",
+    "gulp-concat": "latest",
+    "gulp-livereload": "latest",
+    "gulp-plumber": "^1.0.1",
+    "gulp-sass": "latest",
+    "gulp-stylus": "^2.0.6",
+    "vinyl-source-stream": "latest"
+  }
+}
