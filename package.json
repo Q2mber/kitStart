@@ -14,9 +14,9 @@
     "jade": "latest",
     "underscore": "latest",
     "twitter": "latest",
-    "mysql":"latest",
-    "dateformat":"latest",
-    "kraken-api":"latest"
+    "mysql": "latest",
+    "dateformat": "latest",
+    "kraken-api": "latest"
   },
   "devDependencies": {
     "browserify": "latest",
@@ -24,10 +24,13 @@
     "gulp": "latest",
     "gulp-autoprefixer": "latest",
     "gulp-concat": "latest",
+    "gulp-filter": "^3.0.1",
+    "gulp-jade": "^1.1.0",
     "gulp-livereload": "latest",
     "gulp-plumber": "^1.0.1",
     "gulp-sass": "latest",
     "gulp-stylus": "^2.0.6",
+    "main-bower-files": "^2.9.0",
     "vinyl-source-stream": "latest"
   }
 }
