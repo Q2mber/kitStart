@@ -39,7 +39,7 @@ gulp.task('css', function () {
 
 
 gulp.task('vendor', function () {
-    var jsFilter = gulpFilter('**/*.js');
+    var jsFilter = gulpFilter(['**/*.js','**/**/*.js','**/**/**/*.js']);
     return gulp.src(mainBowerFiles()).pipe(jsFilter)
         .pipe(concat('vendor.js'))
         .pipe(gulp.dest(destFolder + '/js'))

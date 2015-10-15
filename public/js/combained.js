@@ -5,7 +5,7 @@ require("./modules/directives");
 require("./modules/controllers");
 require("./modules/services");
 
-angular.module('kitStart',['d3','kit.directives','kit.controllers','kit.services','ngRoute'])
+angular.module('kitStart',['d3','kit.directives','kit.controllers','kit.services','ngRoute','ui.bootstrap'])
     .config(function ($routeProvider) {
     $routeProvider
         .when('/', {
@@ -14,17 +14,17 @@ angular.module('kitStart',['d3','kit.directives','kit.controllers','kit.services
         })
         .when('/link1', {
             controller: 'kitController',
-            templateUrl: 'html/link1.html'
+            templateUrl: 'html/page1.html'
         })
         .otherwise({
-            redirectTo: '#/'
+            redirectTo: '/',
+            controller: 'kitController'
         });
 });
 
-
 },{"./modules/controllers":4,"./modules/d3":5,"./modules/directives":6,"./modules/services":7}],2:[function(require,module,exports){
-module.exports = function ($scope) {
-
+module.exports = function ($scope, kitService) {
+    $scope.test = "KitStart"
 }
 
 },{}],3:[function(require,module,exports){
@@ -82,7 +82,36 @@ angular.module('kit.services',[])
 
 },{"../services/kitService":8}],8:[function(require,module,exports){
 module.exports = function ($q, $http) {
-
+    return [
+        {
+            page: "Google",
+            category: "mail",
+            added: new Date(),
+            isEdit : false,
+            isActive : false
+        },
+        {
+            page: "ssssssssd",
+            category: "mail",
+            added: new Date(),
+            isEdit : false,
+            isActive : false
+        },
+        {
+            page: "Aoogledsdfdsfsdfsd",
+            category: "mail2",
+            added: new Date(),
+            isEdit : false,
+            isActive : false
+        },
+        {
+            page: "Koogle",
+            category: "mail3",
+            added: new Date(),
+            isEdit : false,
+            isActive : false
+        }
+    ];
 
 }
 

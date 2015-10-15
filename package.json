@@ -31,6 +31,11 @@
     "gulp-sass": "latest",
     "gulp-stylus": "^2.0.6",
     "main-bower-files": "^2.9.0",
-    "vinyl-source-stream": "latest"
+    "vinyl-source-stream": "latest",
+    "karma": "latest",
+    "karma-browserify": "latest",
+    "karma-chrome-launcher": "latest",
+    "karma-jasmine": "latest"
+
   }
 }
