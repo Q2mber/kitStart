@@ -40481,7 +40481,7 @@ $provide.value("$locale", {
  * angular-ui-bootstrap
  * http://angular-ui.github.io/bootstrap/
 
- * Version: 0.14.2 - 2015-10-13
+ * Version: 0.14.3 - 2015-10-23
  * License: MIT
  */
 angular.module("ui.bootstrap", ["ui.bootstrap.tpls", "ui.bootstrap.collapse","ui.bootstrap.accordion","ui.bootstrap.alert","ui.bootstrap.buttons","ui.bootstrap.carousel","ui.bootstrap.dateparser","ui.bootstrap.position","ui.bootstrap.datepicker","ui.bootstrap.dropdown","ui.bootstrap.stackedMap","ui.bootstrap.modal","ui.bootstrap.pagination","ui.bootstrap.tooltip","ui.bootstrap.popover","ui.bootstrap.progressbar","ui.bootstrap.rating","ui.bootstrap.tabs","ui.bootstrap.timepicker","ui.bootstrap.typeahead"]);
@@ -40503,7 +40503,7 @@ angular.module('ui.bootstrap.collapse', [])
               addClass: 'in',
               easing: 'ease',
               to: { height: element[0].scrollHeight + 'px' }
-            }).start().done(expandDone);
+            }).start().finally(expandDone);
           } else {
             $animate.addClass(element, 'in', {
               to: { height: element[0].scrollHeight + 'px' }
@@ -40538,7 +40538,7 @@ angular.module('ui.bootstrap.collapse', [])
             $animateCss(element, {
               removeClass: 'in',
               to: {height: '0'}
-            }).start().done(collapseDone);
+            }).start().finally(collapseDone);
           } else {
             $animate.removeClass(element, 'in', {
               to: {height: '0'}
@@ -40585,20 +40585,19 @@ angular.module('ui.bootstrap.collapse')
 
           if ($animateCss) {
             $animateCss(element, {
-              addClass: 'in',
               easing: 'ease',
               to: { height: element[0].scrollHeight + 'px' }
             }).start().done(expandDone);
           } else {
-            $animate.addClass(element, 'in', {
-              to: { height: element[0].scrollHeight + 'px' }
+            $animate.animate(element, {}, {
+              height: element[0].scrollHeight + 'px'
             }).then(expandDone);
           }
         }
 
         function expandDone() {
           element.removeClass('collapsing')
-            .addClass('collapse')
+            .addClass('collapse in')
             .css({height: 'auto'});
         }
 
@@ -40614,19 +40613,18 @@ angular.module('ui.bootstrap.collapse')
             .css({height: element[0].scrollHeight + 'px'})
             // initially all panel collapse have the collapse class, this removal
             // prevents the animation from jumping to collapsed state
-            .removeClass('collapse')
+            .removeClass('collapse in')
             .addClass('collapsing')
             .attr('aria-expanded', false)
             .attr('aria-hidden', true);
 
           if ($animateCss) {
             $animateCss(element, {
-              removeClass: 'in',
               to: {height: '0'}
             }).start().done(collapseDone);
           } else {
-            $animate.removeClass(element, 'in', {
-              to: {height: '0'}
+            $animate.animate(element, {}, {
+              height: '0'
             }).then(collapseDone);
           }
         }
@@ -40900,13 +40898,16 @@ angular.module('ui.bootstrap.accordion')
 
 angular.module('ui.bootstrap.alert', [])
 
-.controller('UibAlertController', ['$scope', '$attrs', '$timeout', function($scope, $attrs, $timeout) {
+.controller('UibAlertController', ['$scope', '$attrs', '$interpolate', '$timeout', function($scope, $attrs, $interpolate, $timeout) {
   $scope.closeable = !!$attrs.close;
 
-  if (angular.isDefined($attrs.dismissOnTimeout)) {
+  var dismissOnTimeout = angular.isDefined($attrs.dismissOnTimeout) ?
+    $interpolate($attrs.dismissOnTimeout)($scope.$parent) : null;
+
+  if (dismissOnTimeout) {
     $timeout(function() {
       $scope.close();
-    }, parseInt($attrs.dismissOnTimeout, 10));
+    }, parseInt(dismissOnTimeout, 10));
   }
 }])
 
@@ -41010,7 +41011,7 @@ angular.module('ui.bootstrap.buttons', [])
   };
 })
 
-.directive('uibBtnCheckbox', ['$document', function($document) {
+.directive('uibBtnCheckbox', function() {
   return {
     require: ['uibBtnCheckbox', 'ngModel'],
     controller: 'UibButtonsController',
@@ -41048,21 +41049,9 @@ angular.module('ui.bootstrap.buttons', [])
           ngModelCtrl.$render();
         });
       });
-
-      //accessibility
-      element.on('keypress', function(e) {
-        if (attrs.disabled || e.which !== 32 || $document[0].activeElement !== element[0]) {
-          return;
-        }
-
-        scope.$apply(function() {
-          ngModelCtrl.$setViewValue(element.hasClass(buttonsCtrl.activeClass) ? getFalseValue() : getTrueValue());
-          ngModelCtrl.$render();
-        });
-      });
     }
   };
-}]);
+});
 
 /* Deprecated buttons below */
 
@@ -41858,9 +41847,16 @@ angular.module('ui.bootstrap.dateparser', [])
       }
 
       if (isValid(fields.year, fields.month, fields.date)) {
-        dt = new Date(fields.year, fields.month, fields.date,
-          fields.hours, fields.minutes, fields.seconds,
-          fields.milliseconds || 0);
+        if (angular.isDate(baseDate) && !isNaN(baseDate.getTime())) {
+          dt = new Date(baseDate);
+          dt.setFullYear(fields.year, fields.month, fields.date,
+            fields.hours, fields.minutes, fields.seconds,
+            fields.milliseconds || 0);
+        } else {
+          dt = new Date(fields.year, fields.month, fields.date,
+            fields.hours, fields.minutes, fields.seconds,
+            fields.milliseconds || 0);
+        }
       }
 
       return dt;
@@ -42210,17 +42206,6 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
     return arrays;
   };
 
-  // Fix a hard-reprodusible bug with timezones
-  // The bug depends on OS, browser, current timezone and current date
-  // i.e.
-  // var date = new Date(2014, 0, 1);
-  // console.log(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours());
-  // can result in "2013 11 31 23" because of the bug.
-  this.fixTimeZone = function(date) {
-    var hours = date.getHours();
-    date.setHours(hours === 23 ? hours + 2 : 0);
-  };
-
   $scope.select = function(date) {
     if ($scope.datepickerMode === self.minMode) {
       var dt = ngModelCtrl.$viewValue ? new Date(ngModelCtrl.$viewValue) : new Date(0, 0, 0, 0, 0, 0, 0);
@@ -42305,7 +42290,6 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
     var dates = new Array(n), current = new Date(startDate), i = 0, date;
     while (i < n) {
       date = new Date(current);
-      this.fixTimeZone(date);
       dates[i++] = date;
       current.setDate(current.getDate() + 1);
     }
@@ -42315,8 +42299,11 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
   this._refreshView = function() {
     var year = this.activeDate.getFullYear(),
       month = this.activeDate.getMonth(),
-      firstDayOfMonth = new Date(year, month, 1),
-      difference = this.startingDay - firstDayOfMonth.getDay(),
+      firstDayOfMonth = new Date(this.activeDate);
+
+    firstDayOfMonth.setFullYear(year, month, 1);
+
+    var difference = this.startingDay - firstDayOfMonth.getDay(),
       numDisplayedFromPreviousMonth = (difference > 0) ? 7 - difference : - difference,
       firstDate = new Date(firstDayOfMonth);
 
@@ -42407,8 +42394,8 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
         date;
 
     for (var i = 0; i < 12; i++) {
-      date = new Date(year, i, 1);
-      this.fixTimeZone(date);
+      date = new Date(this.activeDate);
+      date.setFullYear(year, i, 1);
       months[i] = angular.extend(this.createDateObject(date, this.formatMonth), {
         uid: scope.uniqueId + '-' + i
       });
@@ -42462,8 +42449,8 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
     var years = new Array(range), date;
 
     for (var i = 0, start = getStartingYear(this.activeDate.getFullYear()); i < range; i++) {
-      date = new Date(start + i, 0, 1);
-      this.fixTimeZone(date);
+      date = new Date(this.activeDate);
+      date.setFullYear(start + i, 0, 1);
       years[i] = angular.extend(this.createDateObject(date, this.formatYear), {
         uid: scope.uniqueId + '-' + i
       });
@@ -42525,7 +42512,9 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
 .directive('uibDaypicker', function() {
   return {
     replace: true,
-    templateUrl: 'template/datepicker/day.html',
+    templateUrl: function(element, attrs) {
+      return attrs.templateUrl || 'template/datepicker/day.html';
+    },
     require: ['^?uibDatepicker', 'uibDaypicker', '^?datepicker'],
     controller: 'UibDaypickerController',
     link: function(scope, element, attrs, ctrls) {
@@ -42540,7 +42529,9 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
 .directive('uibMonthpicker', function() {
   return {
     replace: true,
-    templateUrl: 'template/datepicker/month.html',
+    templateUrl: function(element, attrs) {
+      return attrs.templateUrl || 'template/datepicker/month.html';
+    },
     require: ['^?uibDatepicker', 'uibMonthpicker', '^?datepicker'],
     controller: 'UibMonthpickerController',
     link: function(scope, element, attrs, ctrls) {
@@ -42555,7 +42546,9 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
 .directive('uibYearpicker', function() {
   return {
     replace: true,
-    templateUrl: 'template/datepicker/year.html',
+    templateUrl: function(element, attrs) {
+      return attrs.templateUrl || 'template/datepicker/year.html';
+    },
     require: ['^?uibDatepicker', 'uibYearpicker', '^?datepicker'],
     controller: 'UibYearpickerController',
     link: function(scope, element, attrs, ctrls) {
@@ -42611,7 +42604,7 @@ function(scope, element, attrs, $compile, $parse, $document, $rootScope, $positi
       dateFormat = datepickerPopupConfig.html5Types[attrs.type];
       isHtml5DateInput = true;
     } else {
-      dateFormat = attrs.datepickerPopup || datepickerPopupConfig.datepickerPopup;
+      dateFormat = attrs.datepickerPopup || attrs.uibDatepickerPopup || datepickerPopupConfig.datepickerPopup;
       attrs.$observe('uibDatepickerPopup', function(value, oldValue) {
           var newDateFormat = value || datepickerPopupConfig.datepickerPopup;
           // Invalidate the $modelValue to ensure that formatters re-run
@@ -43101,7 +43094,7 @@ angular.module('ui.bootstrap.datepicker')
   var focusElement = function() {
     self.element[0].focus();
   };
-  
+
   $scope.$on('uib:datepicker.focus', focusElement);
 
   $scope.keydown = function(evt) {
@@ -43393,7 +43386,7 @@ angular.module('ui.bootstrap.dropdown', ['ui.bootstrap.position'])
         if (!angular.isNumber(self.selectedOption)) {
           self.selectedOption = 0;
         } else {
-          self.selectedOption = (self.selectedOption === elems.length -1 ?
+          self.selectedOption = (self.selectedOption === elems.length - 1 ?
             self.selectedOption :
             self.selectedOption + 1);
         }
@@ -43808,7 +43801,7 @@ angular.module('ui.bootstrap.dropdown')
     restrict: 'AC',
     require: '?^dropdown',
     link: function(scope, element, attrs, dropdownCtrl) {
-      if (!dropdownCtrl) {
+      if (!dropdownCtrl || angular.isDefined(attrs.dropdownNested)) {
         return;
       }
 
@@ -43913,7 +43906,6 @@ angular.module('ui.bootstrap.dropdown')
     }
   };
 }]);
-
 
 angular.module('ui.bootstrap.stackedMap', [])
 /**
@@ -44149,7 +44141,7 @@ angular.module('ui.bootstrap.modal', ['ui.bootstrap.stackedMap'])
 
 
           $q.when(animationPromise).then(function() {
-            var inputsWithAutofocus = element[0].querySelectorAll('[autofocus]');
+            var inputWithAutofocus = element[0].querySelector('[autofocus]');
             /**
              * Auto-focusing of a freshly-opened modal element causes any child elements
              * with the autofocus attribute to lose focus. This is an issue on touch
@@ -44158,8 +44150,8 @@ angular.module('ui.bootstrap.modal', ['ui.bootstrap.stackedMap'])
              * the onscreen keyboard. Fixed by updated the focusing logic to only autofocus
              * the modal element if the modal does not contain an autofocus element.
              */
-            if (inputsWithAutofocus.length) {
-              inputsWithAutofocus[0].focus();
+            if (inputWithAutofocus) {
+              inputWithAutofocus.focus();
             } else {
               element[0].focus();
             }
@@ -44525,8 +44517,8 @@ angular.module('ui.bootstrap.modal', ['ui.bootstrap.stackedMap'])
         backdrop: true, //can also be false or 'static'
         keyboard: true
       },
-      $get: ['$injector', '$rootScope', '$q', '$templateRequest', '$controller', '$uibModalStack',
-        function ($injector, $rootScope, $q, $templateRequest, $controller, $modalStack) {
+      $get: ['$injector', '$rootScope', '$q', '$templateRequest', '$controller', '$uibModalStack', '$modalSuppressWarning', '$log',
+        function ($injector, $rootScope, $q, $templateRequest, $controller, $modalStack, $modalSuppressWarning, $log) {
           var $modal = {};
 
           function getTemplatePromise(options) {
@@ -44612,7 +44604,16 @@ angular.module('ui.bootstrap.modal', ['ui.bootstrap.stackedMap'])
                 //controllers
                 if (modalOptions.controller) {
                   ctrlLocals.$scope = modalScope;
-                  ctrlLocals.$modalInstance = modalInstance;
+                  ctrlLocals.$uibModalInstance = modalInstance;
+                  Object.defineProperty(ctrlLocals, '$modalInstance', {
+                    get: function() {
+                      if (!$modalSuppressWarning) {
+                        $log.warn('$modalInstance is now deprecated. Use $uibModalInstance instead.');
+                      }
+
+                      return modalInstance;
+                    }
+                  });
                   angular.forEach(modalOptions.resolve, function(value, key) {
                     ctrlLocals[key] = tplAndVars[resolveIter++];
                   });
@@ -44800,7 +44801,7 @@ angular.module('ui.bootstrap.modal')
 
 
             $q.when(animationPromise).then(function() {
-              var inputsWithAutofocus = element[0].querySelectorAll('[autofocus]');
+              var inputWithAutofocus = element[0].querySelector('[autofocus]');
               /**
                * Auto-focusing of a freshly-opened modal element causes any child elements
                * with the autofocus attribute to lose focus. This is an issue on touch
@@ -44809,8 +44810,8 @@ angular.module('ui.bootstrap.modal')
                * the onscreen keyboard. Fixed by updated the focusing logic to only autofocus
                * the modal element if the modal does not contain an autofocus element.
                */
-              if (inputsWithAutofocus.length) {
-                inputsWithAutofocus[0].focus();
+              if (inputWithAutofocus) {
+                inputWithAutofocus.focus();
               } else {
                 element[0].focus();
               }
@@ -45477,7 +45478,7 @@ angular.module('ui.bootstrap.tooltip', ['ui.bootstrap.position', 'ui.bootstrap.s
           'animation="animation" ' +
           'is-open="isOpen"' +
           'origin-scope="origScope" ' +
-          'style="visibility: hidden; display: block;"' +
+          'style="visibility: hidden; display: block; top: -9999px; left: -9999px;"' +
           '>' +
         '</div>';
 
@@ -45546,6 +45547,7 @@ angular.module('ui.bootstrap.tooltip', ['ui.bootstrap.position', 'ui.bootstrap.s
                 return;
               }
 
+              cancelHide();
               prepareTooltip();
 
               if (ttScope.popupDelay) {
@@ -45560,8 +45562,12 @@ angular.module('ui.bootstrap.tooltip', ['ui.bootstrap.position', 'ui.bootstrap.s
             }
 
             function hideTooltipBind() {
+              cancelShow();
+
               if (ttScope.popupCloseDelay) {
-                hideTimeout = $timeout(hide, ttScope.popupCloseDelay, false);
+                if (!hideTimeout) {
+                  hideTimeout = $timeout(hide, ttScope.popupCloseDelay, false);
+                }
               } else {
                 hide();
               }
@@ -45569,21 +45575,8 @@ angular.module('ui.bootstrap.tooltip', ['ui.bootstrap.position', 'ui.bootstrap.s
 
             // Show the tooltip popup element.
             function show() {
-              if (showTimeout) {
-                $timeout.cancel(showTimeout);
-                showTimeout = null;
-              }
-
-              // If there is a pending remove transition, we must cancel it, lest the
-              // tooltip be mysteriously removed.
-              if (hideTimeout) {
-                $timeout.cancel(hideTimeout);
-                hideTimeout = null;
-              }
-              if (transitionTimeout) {
-                $timeout.cancel(transitionTimeout);
-                transitionTimeout = null;
-              }
+              cancelShow();
+              cancelHide();
 
               // Don't show empty tooltips.
               if (!ttScope.content) {
@@ -45600,13 +45593,7 @@ angular.module('ui.bootstrap.tooltip', ['ui.bootstrap.position', 'ui.bootstrap.s
               });
             }
 
-            // Hide the tooltip popup element.
-            function hide() {
-              if (!ttScope) {
-                return;
-              }
-
-              //if tooltip is going to be shown after delay, we must cancel this
+            function cancelShow() {
               if (showTimeout) {
                 $timeout.cancel(showTimeout);
                 showTimeout = null;
@@ -45615,6 +45602,16 @@ angular.module('ui.bootstrap.tooltip', ['ui.bootstrap.position', 'ui.bootstrap.s
               if (positionTimeout) {
                 $timeout.cancel(positionTimeout);
                 positionTimeout = null;
+              }
+            }
+
+            // Hide the tooltip popup element.
+            function hide() {
+              cancelShow();
+              cancelHide();
+
+              if (!ttScope) {
+                return;
               }
 
               // First things first: we don't show it anymore.
@@ -45633,6 +45630,17 @@ angular.module('ui.bootstrap.tooltip', ['ui.bootstrap.position', 'ui.bootstrap.s
                   removeTooltip();
                 }
               });
+            }
+
+            function cancelHide() {
+              if (hideTimeout) {
+                $timeout.cancel(hideTimeout);
+                hideTimeout = null;
+              }
+              if (transitionTimeout) {
+                $timeout.cancel(transitionTimeout);
+                transitionTimeout = null;
+              }
             }
 
             function createTooltip() {
@@ -45703,9 +45711,8 @@ angular.module('ui.bootstrap.tooltip', ['ui.bootstrap.position', 'ui.bootstrap.s
              * Observe the relevant attributes.
              */
             attrs.$observe('disabled', function(val) {
-              if (showTimeout && val) {
-                $timeout.cancel(showTimeout);
-                showTimeout = null;
+              if (val) {
+                cancelShow();
               }
 
               if (val && ttScope.isOpen) {
@@ -45716,7 +45723,7 @@ angular.module('ui.bootstrap.tooltip', ['ui.bootstrap.position', 'ui.bootstrap.s
             if (isOpenParse) {
               scope.$watch(isOpenParse, function(val) {
                 /*jshint -W018 */
-                if (!val === ttScope.isOpen) {
+                if (ttScope && !val === ttScope.isOpen) {
                   toggleTooltipBind();
                 }
                 /*jshint +W018 */
@@ -45849,10 +45856,8 @@ angular.module('ui.bootstrap.tooltip', ['ui.bootstrap.position', 'ui.bootstrap.s
 
             // Make sure tooltip is destroyed and removed.
             scope.$on('$destroy', function onDestroyTooltip() {
-              $timeout.cancel(transitionTimeout);
-              $timeout.cancel(showTimeout);
-              $timeout.cancel(hideTimeout);
-              $timeout.cancel(positionTimeout);
+              cancelShow();
+              cancelHide();
               unregisterTriggers();
               removeTooltip();
               openedTooltips.remove(ttScope);
@@ -47899,6 +47904,11 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
       if (appendToBody || appendToElementId) {
         $popup.remove();
       }
+
+      if (appendToBody) {
+        angular.element($window).unbind('resize', fireRecalculating);
+        $document.find('body').unbind('scroll', fireRecalculating);
+      }
       // Prevent jQuery cache memory leak
       popUpEl.remove();
     });
@@ -48476,6 +48486,11 @@ angular.module('ui.bootstrap.typeahead')
           $document.unbind('click', dismissClickHandler);
           if (appendToBody || appendToElementId) {
             $popup.remove();
+          }
+
+          if (appendToBody) {
+            angular.element($window).unbind('resize', fireRecalculating);
+            $document.find('body').unbind('scroll', fireRecalculating);
           }
           // Prevent jQuery cache memory leak
           popUpEl.remove();

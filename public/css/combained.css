@@ -7,3 +7,9 @@ body {
 .active {
   font-size: 20px;
 }
+.fail {
+  background-color: #f6a741;
+}
+.pass {
+  background-color: #5bf641;
+}

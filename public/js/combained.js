@@ -10,7 +10,7 @@ angular.module('kitStart',['d3','kit.directives','kit.controllers','kit.services
     $routeProvider
         .when('/', {
             controller: "kitController",
-            templateUrl: "html/link1.html"
+            templateUrl: "html/page1.html"
         })
         .when('/link1', {
             controller: 'kitController',
@@ -24,7 +24,26 @@ angular.module('kitStart',['d3','kit.directives','kit.controllers','kit.services
 
 },{"./modules/controllers":4,"./modules/d3":5,"./modules/directives":6,"./modules/services":7}],2:[function(require,module,exports){
 module.exports = function ($scope, kitService) {
-    $scope.test = "KitStart"
+    $scope.runs;
+    $scope.lastRun;
+    $scope.tests;
+
+    kitService.getRuns()
+        .then(function(data){
+            $scope.runs=data;
+            console.log($scope.runs)
+            $scope.lastRun=data.data[2];
+            console.log($scope.lastRun)
+        })
+        .then(function () {
+           return kitService.getTests($scope.lastRun)
+        })
+        .then(function (data) {
+            $scope.tests = data.data
+            $scope.tests.forEach(function(test){
+                test.type = (test.hasPassed) ? 'pass': 'fail'
+            })
+        })
 }
 
 },{}],3:[function(require,module,exports){
@@ -78,41 +97,34 @@ angular.module('kit.directives',[])
 
 },{"../directives/kitDirective":3}],7:[function(require,module,exports){
 angular.module('kit.services',[])
-    .factory('kitService', require('../services/kitService'));
+    .factory('kitService', require('../services/kitService'))
 
 },{"../services/kitService":8}],8:[function(require,module,exports){
 module.exports = function ($q, $http) {
-    return [
-        {
-            page: "Google",
-            category: "mail",
-            added: new Date(),
-            isEdit : false,
-            isActive : false
-        },
-        {
-            page: "ssssssssd",
-            category: "mail",
-            added: new Date(),
-            isEdit : false,
-            isActive : false
-        },
-        {
-            page: "Aoogledsdfdsfsdfsd",
-            category: "mail2",
-            added: new Date(),
-            isEdit : false,
-            isActive : false
-        },
-        {
-            page: "Koogle",
-            category: "mail3",
-            added: new Date(),
-            isEdit : false,
-            isActive : false
-        }
-    ];
 
+    function getRuns(){
+        return $http({
+            method: 'GET',
+            url: '/db/getRunsId'
+        });
+    }
+
+    function getTests(runId){
+        var data={
+            run:runId
+        };
+        return $http({
+            method: 'POST',
+            url: '/db/getTests',
+            data:data
+        });
+    }
+
+
+    return {
+        getRuns:getRuns,
+        getTests: getTests,
+    };
 }
 
 },{}]},{},[1]);

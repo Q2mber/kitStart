@@ -1,1 +1,10 @@
-h2 {{test}}
+ul.test-list
+    .row.test-item(ng-repeat='test in tests', ng-class='test.type')
+        .col-sm-3
+            |{{test.suite.name}}
+        .col-sm-3
+            |{{test.name}}
+        .col-sm-3
+            |{{test.type}}
+        .col-sm-3
+            |{{test.error}}

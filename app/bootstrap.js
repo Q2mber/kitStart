@@ -9,7 +9,7 @@ angular.module('kitStart',['d3','kit.directives','kit.controllers','kit.services
     $routeProvider
         .when('/', {
             controller: "kitController",
-            templateUrl: "html/link1.html"
+            templateUrl: "html/page1.html"
         })
         .when('/link1', {
             controller: 'kitController',

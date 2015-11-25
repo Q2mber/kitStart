@@ -6,17 +6,19 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "latest",
     "angularjs-scope.safeapply": "latest",
-    "mongodb": "latest",
+    "dateformat": "latest",
     "ejs": "latest",
     "ejs-locals": "latest",
+    "express": "latest",
     "jade": "latest",
-    "underscore": "latest",
-    "twitter": "latest",
+    "kraken-api": "latest",
+    "mongodb": "latest",
+    "mongoose": "^4.2.7",
     "mysql": "latest",
-    "dateformat": "latest",
-    "kraken-api": "latest"
+    "twitter": "latest",
+    "underscore": "latest",
+    "body-parser":"latest"
   },
   "devDependencies": {
     "browserify": "latest",
@@ -36,6 +38,5 @@
     "karma-browserify": "latest",
     "karma-chrome-launcher": "latest",
     "karma-jasmine": "latest"
-
   }
 }

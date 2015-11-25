@@ -1,14 +1,18 @@
 var express = require('express'),
     ejsLocals = require('ejs-locals'),
     app = express();
-var sql = require(__dirname + '/server/sqldb')
+var getTests = require(__dirname + '/server/mongodb').getTests
+var getRunsId = require(__dirname + '/server/mongodb').getRunsId
 
 // configuration settings
 app.engine('ejs', ejsLocals)
 app.set('views', __dirname + '/app/views')
 app.set('view engine', 'jade')
 app.use(express.static(__dirname + '/public'))
-
+app.use(require('body-parser').json());
+app.use(require('body-parser').urlencoded({
+    extended: true
+}));
 
 app.get('/', function (req, res) {
     res.render('index', {
@@ -16,22 +20,13 @@ app.get('/', function (req, res) {
     })
 });
 
-app.get('/sql-get', function (req, res) {
-    sql.get(res);
+app.get('/db/getRunsId', function (req, res) {
+    getRunsId(req, res);
 })
-app.get('/sql-put/:page/:category/:user/:password', function (req, res) {
-    sql.put(res, req.params.page, req.params.category, req.params.user, req.params.password);
+app.post('/db/getTests', function (req, res) {
+    getTests(req.body, res) //req.body must be an object with "run" property, which contains datetime from getRunsId
 })
 
-app.get('/sql-rename/:old/:ne_w', function (req, res) {
-    sql.rename(res, req.params.old, req.params.ne_w);
-})
-app.get('/sql-delete/:page', function (req, res) {
-    sql.del(res, req.params.page);
-})
-app.get('/sql-put/:page/:category/:user/:password', function (req, res) {
-    sql.put(res, req.params.page, req.params.category, req.params.user, req.params.password);
-})
 
 
 module.exports = app

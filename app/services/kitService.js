@@ -1,33 +1,26 @@
 module.exports = function ($q, $http) {
-    return [
-        {
-            page: "Google",
-            category: "mail",
-            added: new Date(),
-            isEdit : false,
-            isActive : false
-        },
-        {
-            page: "ssssssssd",
-            category: "mail",
-            added: new Date(),
-            isEdit : false,
-            isActive : false
-        },
-        {
-            page: "Aoogledsdfdsfsdfsd",
-            category: "mail2",
-            added: new Date(),
-            isEdit : false,
-            isActive : false
-        },
-        {
-            page: "Koogle",
-            category: "mail3",
-            added: new Date(),
-            isEdit : false,
-            isActive : false
-        }
-    ];
 
+    function getRuns(){
+        return $http({
+            method: 'GET',
+            url: '/db/getRunsId'
+        });
+    }
+
+    function getTests(runId){
+        var data={
+            run:runId
+        };
+        return $http({
+            method: 'POST',
+            url: '/db/getTests',
+            data:data
+        });
+    }
+
+
+    return {
+        getRuns:getRuns,
+        getTests: getTests,
+    };
 }
