@@ -68,7 +68,7 @@ gulp.task('jade', function () {
 });
 
 
-gulp.task('dev', function () {
+gulp.task('dev',['vendor','js','jade','css'], function () {
     livereload.listen();
 
     //JADE
