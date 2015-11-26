@@ -21,6 +21,6 @@ html
 
     body(ng-app="kitStart",ng-controller = "kitController")
         include modules/header
+
     .container.main(kit-directive)
-        h1 {{test}}
-        ng-view()
+        .page-conten(ui-view)

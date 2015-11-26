@@ -5,24 +5,23 @@ require("./modules/directives");
 require("./modules/controllers");
 require("./modules/services");
 
-angular.module('kitStart',['d3','kit.directives','kit.controllers','kit.services','ngRoute','ui.bootstrap'])
-    .config(function ($routeProvider) {
-    $routeProvider
-        .when('/', {
-            controller: "kitController",
-            templateUrl: "html/page1.html"
-        })
-        .when('/link1', {
-            controller: 'kitController',
-            templateUrl: 'html/page1.html'
-        })
-        .otherwise({
-            redirectTo: '/',
-            controller: 'kitController'
-        });
-});
+angular.module('kitStart', ['d3', 'kit.directives', 'kit.controllers', 'kit.services', 'ui.router', 'ct.ui.router.extras', 'ui.bootstrap'])
+    .config(function ($stateProvider, $urlRouterProvider, $locationProvider, $urlMatcherFactoryProvider) {
 
-},{"./modules/controllers":4,"./modules/d3":5,"./modules/directives":6,"./modules/services":7}],2:[function(require,module,exports){
+        $stateProvider
+            .state('index', {
+                url:"",
+                controller: "kitController",
+                templateUrl: "/html/page1.html"
+            })
+            .state('run', {
+                url: '/run/:id?',
+                templateUrl: '/html/testList.html',
+                controller: 'testListController'
+            })
+    });
+
+},{"./modules/controllers":5,"./modules/d3":6,"./modules/directives":7,"./modules/services":8}],2:[function(require,module,exports){
 module.exports = function ($scope, kitService) {
     $scope.runs;
     $scope.lastRun;
@@ -30,23 +29,77 @@ module.exports = function ($scope, kitService) {
 
     kitService.getRuns()
         .then(function(data){
-            $scope.runs=data;
+            $scope.runs=data.data.sort();
             console.log($scope.runs)
-            $scope.lastRun=data.data[2];
-            console.log($scope.lastRun)
+            $scope.lastRun=$scope.runs[$scope.runs.length-1];
         })
-        .then(function () {
-           return kitService.getTests($scope.lastRun)
-        })
-        .then(function (data) {
-            $scope.tests = data.data
-            $scope.tests.forEach(function(test){
-                test.type = (test.hasPassed) ? 'pass': 'fail'
-            })
-        })
+        //.then(function () {
+        //   return kitService.getTests($scope.lastRun)
+        //})
+        //.then(function (data) {
+        //    $scope.tests = data.data
+        //    $scope.tests.forEach(function(test){
+        //        test.type = (test.hasPassed) ? 'pass': 'fail'
+        //    })
+        //})
 }
 
 },{}],3:[function(require,module,exports){
+module.exports = function ($scope, kitService, $state, $stateParams) {
+    $scope.runs;
+    $scope.lastRun;
+    $scope.tests;
+
+    $scope.myStyle={
+        width:'35%'
+    }
+    $scope.runResult = {
+        all: 0,
+        passed: 0,
+        failed: 0
+    }
+
+    kitService.getRuns()
+        .then(function (data) {
+            $scope.runs = data.data.sort();
+            console.log($scope.runs)
+            console.log($stateParams.id)
+            console.log($scope.runs[$stateParams.id])
+            $scope.lastRun = $scope.runs[$stateParams.id];
+        })
+        .then(function () {
+            return kitService.getTests($scope.lastRun)
+        })
+        .then(function (data) {
+            console.log(data.data)
+            $scope.tests = data.data
+            $scope.runResult.count = $scope.tests.length;
+            $scope.tests.forEach(function (test) {
+
+                if (test.hasPassed) {
+                    $scope.runResult.passed++;
+                    test.type = 'pass';
+                    test.class ='success'
+                }else{
+                    $scope.runResult.failed++;
+                    test.type = 'fail';
+                    test.class ='danger'
+                }
+
+                test.test = formatTestText(test.test)
+            })
+
+        })
+
+    formatTestText = function (test) {
+        var startIndex = test.indexOf('this.remote') + 'this.remote'.length + 1
+        var endIndex = test.length - 1
+        return test.substring(startIndex, endIndex)
+    }
+
+}
+
+},{}],4:[function(require,module,exports){
 module.exports =
   function () {
     return {
@@ -60,11 +113,12 @@ module.exports =
   }
 ;
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 angular.module('kit.controllers',[])
-    .controller('kitController', require('../controllers/kitController'));
+    .controller('kitController', require('../controllers/kitController'))
+    .controller('testListController', require('../controllers/testListController'));
 
-},{"../controllers/kitController":2}],5:[function(require,module,exports){
+},{"../controllers/kitController":2,"../controllers/testListController":3}],6:[function(require,module,exports){
 angular.module('d3', []).factory('d3Factory',
         function($document, $rootScope, $window, $q){
             // Ваш код
@@ -91,15 +145,15 @@ angular.module('d3', []).factory('d3Factory',
             }
         });
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 angular.module('kit.directives',[])
     .directive('kitDirective', require('../directives/kitDirective'));
 
-},{"../directives/kitDirective":3}],7:[function(require,module,exports){
+},{"../directives/kitDirective":4}],8:[function(require,module,exports){
 angular.module('kit.services',[])
     .factory('kitService', require('../services/kitService'))
 
-},{"../services/kitService":8}],8:[function(require,module,exports){
+},{"../services/kitService":9}],9:[function(require,module,exports){
 module.exports = function ($q, $http) {
 
     function getRuns(){

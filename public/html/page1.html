@@ -1,1 +1,1 @@
-<ul class="test-list"><div ng-repeat="test in tests" ng-class="test.type" class="row test-item"><div class="col-sm-3">{{test.suite.name}}</div><div class="col-sm-3">{{test.name}}</div><div class="col-sm-3">{{test.type}}</div><div class="col-sm-3">{{test.error}}</div></div></ul>
+<h1>Run List</h1><ul class="run-list list-group"><div ng-repeat="run in runs" class="run-item list-group-item"><a ng-href="#/run/{{$index}}">{{run}}</a></div></ul>

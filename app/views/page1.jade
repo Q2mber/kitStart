@@ -1,10 +1,6 @@
-ul.test-list
-    .row.test-item(ng-repeat='test in tests', ng-class='test.type')
-        .col-sm-3
-            |{{test.suite.name}}
-        .col-sm-3
-            |{{test.name}}
-        .col-sm-3
-            |{{test.type}}
-        .col-sm-3
-            |{{test.error}}
+h1
+    |Run List
+ul.run-list.list-group
+    .run-item.list-group-item(ng-repeat='run in runs')
+        a(ng-href="#/run/{{$index}}")
+            |{{run}}

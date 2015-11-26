@@ -1,0 +1,21 @@
+h1
+    |Test results
+.progress
+    .progress-bar.progress-bar-success(ng-style='{width: (runResult.passed/runResult.count*100)+"%"}')
+        |{{runResult.passed+" success"}}
+    .progress-bar.progress-bar-danger(ng-style='{width: (runResult.failed/runResult.count*100)+"%"}')
+        |{{runResult.failed+" failed"}}
+
+ul.list-group
+    .row.test-item.list-group-item(ng-repeat='test in tests', ng-class='test.type')
+        .col-sm-2
+            | {{test.suite.name}}
+        .col-sm-2
+            | {{test.name}}
+        .col-sm-1
+            span(ng-class='"label label-"+test.class')
+                | {{test.type}}
+        .col-sm-4
+            | {{test.test}}
+        .col-sm-3
+            | {{test.error}}

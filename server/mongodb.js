@@ -14,7 +14,8 @@ var test = new mongoose.Schema({
     hasPassed: 'Boolean',
     timeElapsed: 'Date',
     skipped: 'Boolean',
-    error: 'String'
+    error: 'String',
+    fields: 'array'
 });
 var dbModel = db.model('starts', test)
 
@@ -42,5 +43,10 @@ function getTests(req, res) {
         }
     })
 }
+
+function putField() {
+    dbModel.update( { _name: "Check \"Check Your Answer Status\" Link" } , { $push: { fields: { name:"peter", sname: "semen" } } } );
+}
+//putField()
 exports.getRunsId = getRunsId
 exports.getTests = getTests

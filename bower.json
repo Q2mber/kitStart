@@ -7,6 +7,8 @@
     "angular": "latest",
     "angular-bootstrap":"latest",
     "angular-route": "latest",
-    "angular-mocks": "latest"
+    "angular-mocks": "latest",
+    "angular-ui-router": "~0.2.15",
+    "ui-router-extras": "~0.0.13"
   }
 }
