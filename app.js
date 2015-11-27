@@ -32,7 +32,7 @@ app.post('/db/getTests', function (req, res) {
 
 app.post('/execute/intern',
     function (req, res) {
-    exec(req.body.command,{ cwd: '../testing'},
+    exec(req.body.command,{ cwd: '..'},
         function (error, stdout, stderr) {
             console.log('stdout: ' + stdout);
             console.log('stderr: ' + stderr);
