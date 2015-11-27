@@ -1,10 +1,10 @@
 h1
     |Test results
 .progress
-    .progress-bar.progress-bar-success(ng-style='{width: (runResult.passed/runResult.count*100)+"%"}')
-        |{{runResult.passed+" success"}}
-    .progress-bar.progress-bar-danger(ng-style='{width: (runResult.failed/runResult.count*100)+"%"}')
-        |{{runResult.failed+" failed"}}
+    .progress-bar.progress-bar-success(ng-style='{width: (tests.results.passed/tests.results.count*100)+"%"}')
+        |{{tests.results.passed+" success"}}
+    .progress-bar.progress-bar-danger(ng-style='{width: (tests.results.failed/tests.results.count*100)+"%"}')
+        |{{tests.results.failed+" failed"}}
 
 ul.list-group
     .row.test-item.list-group-item(ng-repeat='test in tests', ng-class='test.type')
@@ -16,6 +16,7 @@ ul.list-group
             span(ng-class='"label label-"+test.class')
                 | {{test.type}}
         .col-sm-4
-            | {{test.test}}
+            p(ng-repeat='step in test.test track by $index' ng-class='isErrorStep(step,test)')
+                | {{step}}
         .col-sm-3
             | {{test.error}}

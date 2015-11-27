@@ -19,76 +19,98 @@ angular.module('kitStart', ['d3', 'kit.directives', 'kit.controllers', 'kit.serv
                 templateUrl: '/html/testList.html',
                 controller: 'testListController'
             })
+            .state('addRun', {
+                url: '/add',
+                templateUrl: '/html/addRun.html',
+                controller: 'addRunController'
+            })
     });
 
-},{"./modules/controllers":5,"./modules/d3":6,"./modules/directives":7,"./modules/services":8}],2:[function(require,module,exports){
-module.exports = function ($scope, kitService) {
-    $scope.runs;
-    $scope.lastRun;
-    $scope.tests;
+},{"./modules/controllers":6,"./modules/d3":7,"./modules/directives":8,"./modules/services":9}],2:[function(require,module,exports){
+module.exports = function ($scope, kitService, $state, $stateParams) {
+    $scope.commandBase = 'node_modules/.bin/intern-runner config=tests/intern \\';
+    $scope.command;
 
-    kitService.getRuns()
-        .then(function(data){
-            $scope.runs=data.data.sort();
-            console.log($scope.runs)
-            $scope.lastRun=$scope.runs[$scope.runs.length-1];
+    $scope.run=function(command){
+        kitService.runTests(command)
+    }
+
+    $scope.suites = kitService.functionalSuites.map(function (suite) {
+        return {
+            name:suite.substring('functests/suites/'.length,suite.length),
+            path:suite
+        }
+    });
+    console.log($scope.suites)
+
+    $scope.checkedSuites=[];
+
+    $scope.changeCheckedSuites = function (suite) {
+        var index = $scope.checkedSuites.indexOf(suite)
+        if(index<0){
+            $scope.checkedSuites.push(suite)
+        }else{
+            $scope.checkedSuites.splice(index,1)
+        }
+        console.log($scope.checkedSuites)
+    }
+
+    $scope.$watchCollection('checkedSuites', function(newValue, oldValue) {
+        $scope.command = $scope.commandBase;
+        $scope.checkedSuites.forEach(function(suite){
+            $scope.command+='functionalSuites='+suite.path+' \\'
         })
-        //.then(function () {
-        //   return kitService.getTests($scope.lastRun)
-        //})
-        //.then(function (data) {
-        //    $scope.tests = data.data
-        //    $scope.tests.forEach(function(test){
-        //        test.type = (test.hasPassed) ? 'pass': 'fail'
-        //    })
-        //})
+    });
 }
 
 },{}],3:[function(require,module,exports){
-module.exports = function ($scope, kitService, $state, $stateParams) {
+module.exports = function ($scope, $q, kitService) {
     $scope.runs;
-    $scope.lastRun;
-    $scope.tests;
 
-    $scope.myStyle={
-        width:'35%'
-    }
-    $scope.runResult = {
-        all: 0,
-        passed: 0,
-        failed: 0
-    }
 
     kitService.getRuns()
         .then(function (data) {
-            $scope.runs = data.data.sort();
-            console.log($scope.runs)
-            console.log($stateParams.id)
-            console.log($scope.runs[$stateParams.id])
-            $scope.lastRun = $scope.runs[$stateParams.id];
+            return data.data.sort().reverse();
         })
-        .then(function () {
-            return kitService.getTests($scope.lastRun)
+        .then(function (runsId) {
+            return $q.all(runsId.map(function (run) {
+                return kitService.getTests(run)
+            }))
         })
-        .then(function (data) {
-            console.log(data.data)
-            $scope.tests = data.data
-            $scope.runResult.count = $scope.tests.length;
-            $scope.tests.forEach(function (test) {
+        .then(function (all) {
+            return all.map(function (run) {
+                var count = 0,
+                    failed = 0,
+                    passed = 0;
+                run.data.forEach(function (test) {
+                    if (test.hasPassed) {
+                        passed++;
+                        test.type = 'pass';
+                        test.class = 'success'
+                    } else {
+                        failed++;
+                        test.type = 'fail';
+                        test.class = 'danger'
+                    }
 
-                if (test.hasPassed) {
-                    $scope.runResult.passed++;
-                    test.type = 'pass';
-                    test.class ='success'
-                }else{
-                    $scope.runResult.failed++;
-                    test.type = 'fail';
-                    test.class ='danger'
+                    test.test = formatTestText(test.test)
+                })
+
+                return {
+                    date: run.data[0].run,
+                    tests: run.data,
+                    results: {
+                        count: run.data.length,
+                        failed: failed,
+                        passed: passed
+                    }
+
                 }
-
-                test.test = formatTestText(test.test)
             })
 
+        })
+        .then(function (data) {
+            $scope.runs = data
         })
 
     formatTestText = function (test) {
@@ -96,10 +118,38 @@ module.exports = function ($scope, kitService, $state, $stateParams) {
         var endIndex = test.length - 1
         return test.substring(startIndex, endIndex)
     }
-
 }
 
 },{}],4:[function(require,module,exports){
+module.exports = function ($scope, kitService, $state, $stateParams) {
+    $scope.runs;
+    $scope.lastRun;
+    $scope.tests = $scope.runs[$stateParams.id].tests
+        .map(function (test) {
+            if(typeof test.test == 'string')
+                test.test= test.test.split(' .')
+            return test
+    });
+    //console.log(tests)
+    $scope.isErrorStep = function (step,test) {
+        if(!!!test.hasPassed && test.error.indexOf(step.substring(0,step.indexOf('(')))>-1 && step.replace(/\s/g, '').length>0){
+            return 'alert alert-warning'
+        }
+       else
+            return true
+    }
+
+    $scope.myStyle = {
+        width: '35%'
+    }
+    $scope.runResult = {
+        all: 0,
+        passed: 0,
+        failed: 0
+    }
+}
+
+},{}],5:[function(require,module,exports){
 module.exports =
   function () {
     return {
@@ -113,12 +163,13 @@ module.exports =
   }
 ;
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 angular.module('kit.controllers',[])
     .controller('kitController', require('../controllers/kitController'))
-    .controller('testListController', require('../controllers/testListController'));
+    .controller('testListController', require('../controllers/testListController'))
+    .controller('addRunController', require('../controllers/addRunController'));
 
-},{"../controllers/kitController":2,"../controllers/testListController":3}],6:[function(require,module,exports){
+},{"../controllers/addRunController":2,"../controllers/kitController":3,"../controllers/testListController":4}],7:[function(require,module,exports){
 angular.module('d3', []).factory('d3Factory',
         function($document, $rootScope, $window, $q){
             // Ваш код
@@ -145,15 +196,15 @@ angular.module('d3', []).factory('d3Factory',
             }
         });
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 angular.module('kit.directives',[])
     .directive('kitDirective', require('../directives/kitDirective'));
 
-},{"../directives/kitDirective":4}],8:[function(require,module,exports){
+},{"../directives/kitDirective":5}],9:[function(require,module,exports){
 angular.module('kit.services',[])
     .factory('kitService', require('../services/kitService'))
 
-},{"../services/kitService":9}],9:[function(require,module,exports){
+},{"../services/kitService":10}],10:[function(require,module,exports){
 module.exports = function ($q, $http) {
 
     function getRuns(){
@@ -174,10 +225,76 @@ module.exports = function ($q, $http) {
         });
     }
 
+    function runTests(command){
+        var data=command;
+        return $http({
+            method: 'POST',
+            url: '/execute/intern',
+            data:{
+               command:command
+            }
+        });
+    }
+
+    functionalSuites= [
+        'functests/suites/medlanes/addQuestionSuite',
+        'functests/suites/medlanes/paypalSuite',
+        'functests/suites/medlanes/stripeSuite',
+        'functests/suites/medlanes/pageTimeLoadSuite',
+        'functests/suites/medlanes/pageRedirectSuite',
+        'functests/suites/medlanes/apiChecksSuite',
+        'functests/suites/medlanes/couponsSuite',
+        'functests/suites/medlanes/signupMailSuite',
+
+        'functests/suites/medmedo/addQuestionSuite',
+        'functests/suites/medmedo/paypalSuite',
+        'functests/suites/medmedo/stripeSuite',
+        'functests/suites/medmedo/pageTimeLoadSuite',
+        'functests/suites/medmedo/pageRedirectSuite',
+        'functests/suites/medmedo/apiChecksSuite',
+        'functests/suites/medmedo/couponSuite',
+        'functests/suites/medmedo/signupMailSuite',
+
+        'functests/suites/mobileWebApp/addQuestionSuite',
+        'functests/suites/mobileWebApp/paymentSuite',
+        'functests/suites/mobileWebApp/signupMailSuite',
+
+        'functests/suites/askadoctor/addQuestionSuite',
+        'functests/suites/askadoctor/paypalSuite',
+        'functests/suites/askadoctor/stripeSuite',
+        'functests/suites/askadoctor/apiChecksSuite',
+        'functests/suites/askadoctor/pageTimeLoadSuite',
+        'functests/suites/askadoctor/pageRedirectSuite',
+        'functests/suites/askadoctor/signupMailSuite',
+
+        'functests/suites/askadoctor/userpanel/loginSuite',
+        'functests/suites/askadoctor/userpanel/newQuestionSuite',
+        'functests/suites/askadoctor/userpanel/paypalSuite',
+        'functests/suites/askadoctor/userpanel/stripleSuite',
+        'functests/suites/askadoctor/userpanel/apiChecksSuite',
+        'functests/suites/askadoctor/userpanel/pageLoadTimeSuite',
+
+        'functests/suites/askadoctor/doctorpanel/loginSuite',
+        'functests/suites/askadoctor/doctorpanel/pageLoadTimeSuite',
+
+        'functests/suites/askadoctor/doctor-user/replyQuestion',
+
+        'functests/suites/stageMedlanes/loginSuite',
+
+        'functests/suites/userpanel/loginSuite',
+        'functests/suites/userpanel/newQuestionSuite',
+        'functests/suites/userpanel/pageTimeLoadSuite',
+        'functests/suites/userpanel/pageRedirectSuite',
+
+        //'functests/suites/debug'
+    ]
+
 
     return {
         getRuns:getRuns,
         getTests: getTests,
+        runTests:runTests,
+        functionalSuites:functionalSuites
     };
 }
 

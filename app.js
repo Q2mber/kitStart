@@ -1,8 +1,11 @@
 var express = require('express'),
     ejsLocals = require('ejs-locals'),
-    app = express();
-var getTests = require(__dirname + '/server/mongodb').getTests
-var getRunsId = require(__dirname + '/server/mongodb').getRunsId
+    util = require('util'),
+    exec = require('child_process').exec,
+    app = express(),
+
+    getTests = require(__dirname + '/server/mongodb').getTests,
+    getRunsId = require(__dirname + '/server/mongodb').getRunsId
 
 // configuration settings
 app.engine('ejs', ejsLocals)
@@ -26,6 +29,19 @@ app.get('/db/getRunsId', function (req, res) {
 app.post('/db/getTests', function (req, res) {
     getTests(req.body, res) //req.body must be an object with "run" property, which contains datetime from getRunsId
 })
+
+app.post('/execute/intern',
+    function (req, res) {
+    exec(req.body.command,{ cwd: '../testing'},
+        function (error, stdout, stderr) {
+            console.log('stdout: ' + stdout);
+            console.log('stderr: ' + stderr);
+            if (error !== null) {
+                console.log('exec error: ' + error);
+            }
+        });
+})
+
 
 
 

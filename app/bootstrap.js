@@ -18,4 +18,9 @@ angular.module('kitStart', ['d3', 'kit.directives', 'kit.controllers', 'kit.serv
                 templateUrl: '/html/testList.html',
                 controller: 'testListController'
             })
+            .state('addRun', {
+                url: '/add',
+                templateUrl: '/html/addRun.html',
+                controller: 'addRunController'
+            })
     });

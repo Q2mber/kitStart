@@ -1,0 +1,12 @@
+h1
+    | App Run
+.input-group
+    input.form-control(type='text', placeholder="Run Command", aria-describedby='basic-addon2', ng-value='command')
+    span.input-group-btn
+        button.btn.btn-default(type='button',ng-click='run(command)') Go
+
+ul.run-list.list-group
+    li.row.list-group-item(ng-repeat='suite in suites')
+        label
+            input(ng-model='suite.checked',ng-change='changeCheckedSuites(suite)',type='checkbox')
+            | {{suite.name}}

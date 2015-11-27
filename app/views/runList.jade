@@ -1,0 +1,13 @@
+h1
+    |Run List
+ul.run-list.list-group
+    a.run-item.row.list-group-item(ng-repeat='run in runs',ng-href="#/run/{{$index}}")
+        .col-sm-3
+                |{{run.date | date:'short'}}
+        .col-sm-9
+            .progress
+                .progress-bar.progress-bar-success(ng-style='{width: (run.results.passed/run.results.count*100)+"%"}')
+                    |{{run.results.passed+" success"}}
+                .progress-bar.progress-bar-danger(ng-style='{width: (run.results.failed/run.results.count*100)+"%"}')
+                    |{{run.results.failed+" failed"}}
+

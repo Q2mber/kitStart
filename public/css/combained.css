@@ -13,3 +13,6 @@ body {
 .pass {
   background-color: #5bf641;
 }
+.failed-step {
+  background-color: #f6a741;
+}
